@@ -4,20 +4,48 @@ import { FaFilm } from "react-icons/fa";
 import EmailInput from "../components/EmailInput";
 import PasswordInput from "../components/PasswordInput";
 import Button from "../components/Button";
+import { useNavigate } from "react-router-dom";
+import { RegisterUser } from "../services/register.service";
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState('');
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
-  const handleRegister = () => {
-    if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
-      return;
+  const navigate = useNavigate();
+
+  const handleRegister = async () =>{
+    try{
+      if (!email || !password || !confirmPassword) {
+        setRegisterError('Preencha todos os campos.');
+        setTimeout(() => {
+            setRegisterError('');
+          }, 2500);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setRegisterError('senhas diferentes.');
+        setTimeout(() => {
+            setRegisterError('');
+          }, 2500);
+        return;
+      }
+      const registerData = {email, password};
+        await RegisterUser.register(registerData);
+        setRegisterSuccess(true);
+        setTimeout(() => {
+          navigate('/');
+        }, 3000);
+    }catch(error){
+      console.log(error);
+      setRegisterError('E-mail já cadastrado. Tente outro endereço de e-mail.');
+      setTimeout(() => {
+        setRegisterError('');
+      }, 2500);
     }
-    setError(null); 
-  };
+  }
 
   return (
     <div className="w-screen h-screen bg-customInput flex items-center justify-between">
@@ -49,8 +77,8 @@ const Register: React.FC = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
-          {error && (
-            <p className="text-red-500 mt-2">{error}</p>
+          {registerError && (
+            <p className="text-red-500 mt-2">{registerError}</p>
           )}
           <div className="flex flex-col justify-center items-center">
             <Button className="mt-4" onClick={handleRegister}>
