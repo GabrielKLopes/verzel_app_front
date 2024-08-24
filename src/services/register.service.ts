@@ -9,7 +9,7 @@ interface RegisterUserInteface{
 export const RegisterUser = {
     register: async (registerUser: RegisterUserInteface) =>{
         try{
-            const response = await api.post('https://verzel-app-back.vercel.app/session/user/register', registerUser);
+            const response = await api.post('/session/user/register', registerUser);
             if(response.data && response.data.token){
                 Cookies.set('token', response.data.token, {expires : 7});
             }
