@@ -4,11 +4,29 @@ import cineImage from "../assets/images/cine.jpg";
 import PasswordInput from "../components/PasswordInput";
 import { FaFilm } from "react-icons/fa";
 import Button from "../components/Button";
+import { AuthService } from "../services/Auth.service";
+import { useNavigate } from "react-router-dom";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [loginError, setLoginError] = useState(false);
+  const navigate = useNavigate();
 
+  const handleLogin = async () => {
+    try {
+      const user = await AuthService.login({ email, password });
+      console.log('Login successful!', user);
+      
+      navigate('/home');
+    } catch (error) {
+      console.error('Login failed!');
+      setLoginError(true);
+    }
+  };
+  const handleCloseAlert = () => {
+    setLoginError(false);
+  };
   return (
     <div className="w-screen h-screen bg-customInput flex items-center justify-between">
       <div className="relative w-1/2 h-full">
@@ -34,7 +52,7 @@ const Login: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
           <div className="flex flex-col justify-center items-center">
-            <Button className="mt-4">Entrar</Button>
+            <Button className="mt-4" onClick={handleLogin}>Entrar</Button>
             <div className="flex mt-5 gap-2">
               <h1 className="text-gray-400">Não tem conta?</h1>
               <a
