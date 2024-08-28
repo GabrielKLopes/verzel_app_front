@@ -1,146 +1,153 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import { FaRegBookmark, FaBookmark } from "react-icons/fa";
+import RatingStars from "./RatingStar";
+import FavoriteButton from "./FavoriteButton";
+import GenreFilter from "./GenreFilter";
+import SearchBar from "./SearchBar";
+import Loading from "./Loading";
+import { Movie } from "../interface/interfaces";
+import { genresList } from "../constants/constants";
 
-interface Genre {
-  id: number;
-  name: string;
-}
-
-interface Movie {
-  id: number;
-  title: string;
-  overview: string;
-  poster_path: string;
-  vote_average: number;
-  genre_ids: number[];
-}
-
-const genresList: Genre[] = [
-  { id: 28, name: "Action" },
-  { id: 12, name: "Adventure" },
-  { id: 16, name: "Animation" },
-  { id: 35, name: "Comedy" },
-  { id: 80, name: "Crime" },
-  { id: 99, name: "Documentary" },
-  { id: 18, name: "Drama" },
-  { id: 10751, name: "Family" },
-  { id: 14, name: "Fantasy" },
-  { id: 36, name: "History" },
-  { id: 27, name: "Horror" },
-  { id: 10402, name: "Music" },
-  { id: 9648, name: "Mystery" },
-  { id: 10749, name: "Romance" },
-  { id: 878, name: "Science Fiction" },
-  { id: 10770, name: "TV Movie" },
-  { id: 53, name: "Thriller" },
-  { id: 10752, name: "War" },
-  { id: 37, name: "Western" },
-];
 
 const MovieGrid: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [selectedGenre, setSelectedGenre] = useState<number | null>(null);
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [currentGenreIndex, setCurrentGenreIndex] = useState(0);
   const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const [hasMoreMovies, setHasMoreMovies] = useState(true);
 
-  const fetchMovies = async (genreId: number | null = null, page: number = 1) => {
+  const genresPerPage = 10;
+
+  const fetchMovies = async (genreId: number | null = null, page: number = 1, searchQuery: string = "") => {
+    setIsLoading(true);
     try {
-      const url = genreId
-        ? `http://localhost:4000/movies/genre/${genreId}?page=${page}`
-        : `http://localhost:4000/movies/?page=${page}`;
+      let url = `http://localhost:4000/movies/?page=${page}`;
+      if (genreId && genreId !== 0) {
+        url = `http://localhost:4000/movies/genre/${genreId}?page=${page}`;
+      } else if (searchQuery) {
+        url = `http://localhost:4000/movie/search?query=${searchQuery}`;
+      }
       const response = await axios.get(url);
       const moviesData = response.data.results || [];
-      setMovies((prevMovies) => [...prevMovies, ...moviesData]); // Adiciona novos filmes à lista existente
+      if (page === 1) {
+        setMovies(moviesData);
+      } else {
+        setMovies((prevMovies) => [...prevMovies, ...moviesData]);
+      }
+      setHasMoreMovies(moviesData.length > 0);
     } catch (error) {
       console.error("Erro ao buscar os filmes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadMoreMovies = () => {
+    if (hasMoreMovies && !isLoading) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const handleScroll = useCallback(() => {
+    const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+    const bottom = document.documentElement.offsetHeight;
+    if (scrollPosition + 200 >= bottom) {
+      loadMoreMovies();
+    }
+  }, [hasMoreMovies, isLoading]);
+
+  useEffect(() => {
+    fetchMovies(selectedGenre, page, searchTerm);
+  }, [selectedGenre, page, searchTerm]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  const nextGenres = () => {
+    if (currentGenreIndex + genresPerPage < genresList.length) {
+      setCurrentGenreIndex((prevIndex) => prevIndex + genresPerPage);
+    }
+  };
+
+  const prevGenres = () => {
+    if (currentGenreIndex > 0) {
+      setCurrentGenreIndex((prevIndex) => prevIndex - genresPerPage);
+    }
+  };
+
+  const handleGenreClick = (genreId: number) => {
+    setSearchTerm(""); 
+    if (selectedGenre === genreId) {
+      setSelectedGenre(0); 
+      setPage(1);
+      setMovies([]);
+    } else {
+      setSelectedGenre(genreId);
+      setPage(1);
       setMovies([]);
     }
   };
 
-  useEffect(() => {
-    fetchMovies(selectedGenre, page); // Carrega filmes com base na página atual
-  }, [selectedGenre, page]);
-
-  const toggleFavorite = (movieId: number) => {
-    setFavorites((prevFavorites) =>
-      prevFavorites.includes(movieId)
-        ? prevFavorites.filter((id) => id !== movieId)
-        : [...prevFavorites, movieId]
-    );
-  };
-
-  const isFavorite = (movieId: number) => favorites.includes(movieId);
-
-  const loadMoreMovies = () => {
-    setPage((prevPage) => prevPage + 1);
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPage(1); 
   };
 
   return (
-    <div className="w-full h-auto bg-red-400 p-4">
-      <h2 className="text-2xl font-bold mb-4">Filmes</h2>
-      <div className="flex gap-4 mb-6 overflow-x-auto">
-        <button
-          onClick={() => {
-            setSelectedGenre(null);
-            setPage(1); // Reinicia a página ao mudar de gênero
-            setMovies([]); // Limpa os filmes ao mudar de gênero
-          }}
-          className={`px-4 py-2 rounded-full ${
-            !selectedGenre ? "bg-orange-600 text-white" : "bg-gray-200 text-gray-800"
-          }`}
-        >
-          Todos
-        </button>
-        {genresList.map((genre) => (
-          <button
-            key={genre.id}
-            onClick={() => {
-              setSelectedGenre(genre.id);
-              setPage(1); // Reinicia a página ao mudar de gênero
-              setMovies([]); // Limpa os filmes ao mudar de gênero
-            }}
-            className={`px-4 py-2 rounded-full ${
-              selectedGenre === genre.id ? "bg-orange-600 text-white" : "bg-gray-200 text-gray-800"
-            }`}
-          >
-            {genre.name}
-          </button>
-        ))}
+    <div className="w-full h-auto p-4">
+      <h1 className="text-4xl font-bold ml-5  text-orange-600">Filmes</h1>
+      <div className="flex justify-end  mr-5 ">
+      <SearchBar searchTerm={searchTerm} onSearch={handleSearch} />
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <GenreFilter
+        genres={genresList}
+        currentGenreIndex={currentGenreIndex}
+        genresPerPage={genresPerPage}
+        selectedGenre={selectedGenre}
+        onGenreClick={handleGenreClick}
+        onNext={nextGenres}
+        onPrev={prevGenres}
+      />
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {movies.length > 0 ? (
           movies.map((movie) => (
-            <div key={movie.id} className="bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center">
-              <img
-                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                alt={movie.title}
-                className="w-full h-auto object-cover rounded-lg mb-4"
-              />
-              <div className="flex flex-col items-center text-center">
-                <h3 className="text-lg font-bold mb-2">{movie.title}</h3>
-                <button
-                  onClick={() => toggleFavorite(movie.id)}
-                  className={`text-xl ${
-                    isFavorite(movie.id) ? "text-orange-600" : "text-white"
-                  } transition-colors duration-300`}
-                >
-                  {isFavorite(movie.id) ? <FaBookmark /> : <FaRegBookmark />}
-                </button>
-                <p className="text-sm mt-2">{movie.overview}</p>
+            <div
+              key={movie.id}
+              className="relative p-4 rounded-lg shadow-md flex flex-col items-center transition-transform transform hover:scale-105 hover:shadow-lg"
+            >
+              <div className="relative w-full h-auto">
+                <img
+                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                  alt={movie.title}
+                  className="w-full h-auto object-cover rounded-lg"
+                />
+                <div className="absolute top-2 right-2">
+                  <FavoriteButton movieId={movie.id} />
+                </div>
+                <div className="absolute top-2 left-2 bg-black bg-opacity-50 p-2 rounded-md">
+                  <RatingStars rating={movie.vote_average} />
+                </div>
               </div>
+              <div className="flex gap-3 items-center text-center mt-4">
+                <h3 className="font-bold text-white">{movie.title}</h3>
+              </div>
+              <a
+                href={`/movie/${movie.id}`}
+                className="text-orange-500 font-semibold hover:text-orange-600 transition duration-200"
+              >
+                Detalhar
+              </a>
             </div>
           ))
         ) : (
           <p className="text-center text-gray-400">Nenhum filme encontrado.</p>
         )}
       </div>
-      <button
-        onClick={loadMoreMovies}
-        className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-lg"
-      >
-        Carregar mais
-      </button>
+      {isLoading && <Loading />} 
     </div>
   );
 };

@@ -6,16 +6,18 @@ import { FaFilm } from "react-icons/fa";
 import Button from "../components/Button";
 import { AuthService } from "../services/Auth.service";
 import { useNavigate } from "react-router-dom";
+import { useFavorites } from "../context/FavoitesContex";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loginError, setLoginError] = useState(false);
   const navigate = useNavigate();
+  const { setFavorites } = useFavorites();
 
   const handleLogin = async () => {
     try {
-      const user = await AuthService.login({ email, password });
+      const user = await AuthService.login({ email, password }, setFavorites);
       console.log('Login successful!', user);
       
       navigate('/home');
