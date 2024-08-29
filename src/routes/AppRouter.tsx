@@ -7,6 +7,7 @@ import MovieDetails from '../pages/MovieDetails';
 
 import { AuthService } from '../services/Auth.service';
 import Favorites from '../pages/Favorites';
+import SharedFavorites from '../pages/SharedFavorite';
 
 const ProtectedRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {
   const navigate = useNavigate();
@@ -30,6 +31,8 @@ const AppRouter: React.FC = () => {
         <Route path="/home" element={<ProtectedRoute element={<Home />} />} />
         <Route path="/movie/:id" element={<ProtectedRoute element={<MovieDetails />} />} />
         <Route path="/favorites" element={<ProtectedRoute element={<Favorites />} />} /> 
+        <Route path="/movie/share/:userId" element={<SharedFavorites />} /> 
+
       </Routes>
     </Router>
   );

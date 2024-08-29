@@ -15,7 +15,7 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled }) => {
   const handleLogout = async () => {
     try {
       await AuthService.logout();
-      navigate('/favorites'); // Redireciona para a página de favoritos
+      navigate('/'); 
     } catch (error) {
       console.error("Erro ao sair", error);
     }
@@ -33,7 +33,9 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled }) => {
     >
       <div className="container mx-auto p-4 text-white flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <FaFilm className="text-white hover:text-orange-600" size={40} />
+         <Link to="/home">
+             <FaFilm className="text-white hover:text-orange-600" size={40} />
+         </Link>
         </div>
         <div className="flex items-center space-x-4">
           <Link to="/home" className="hover:text-orange-600">

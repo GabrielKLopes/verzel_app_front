@@ -17,8 +17,8 @@ const EmailInput: React.FC<EmailInputProps> = ({ value, onChange, placeholder, l
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="shadow appearance-none border border-transparent rounded py-2 px-3 bg-customGray
-      text-gray-400 leading-tight focus:outline-none focus:shadow-outline focus:border-red-500 w-full pr-10"
+        className="shadow appearance-none border border-orange-600 rounded py-3 px-4 bg-customGray
+      text-gray-400 leading-tight focus:outline-none focus:shadow-outline focus:border-orange-500 w-full pr-10"
       />
     </div>
   );

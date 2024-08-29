@@ -9,10 +9,13 @@ import { NextArrow, PrevArrow } from '../components/SliderArrows';
 import FavoriteButton from '../components/FavoriteButton';
 import MovieGrid from '../components/MovieGrid';
 import { useFavorites } from '../context/FavoitesContex';
+import Loading from '../components/Loading';
 
 const Home: React.FC = () => {
   const [movies, setMovies] = useState<any[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
   useFavorites();
 
   const movieIds = [533535, 1022789, 519182, 718821];
@@ -38,14 +41,20 @@ const Home: React.FC = () => {
       } catch (error) {
         console.error('Erro ao buscar os filmes:', error);
         setMovies([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchMovies();
   }, []);
 
-  if (movies.length === 0) {
-    return <div>Carregando...</div>;
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen bg-customGray flex items-center justify-center">
+        <Loading />
+      </div>
+    );
   }
 
   const settings = {

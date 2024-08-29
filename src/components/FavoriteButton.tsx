@@ -41,7 +41,6 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ movieId, onFavoriteChan
       }
       setLocalIsFavorite(!localIsFavorite);
 
-      // Chamar a função de callback, se fornecida
       if (onFavoriteChange) {
         onFavoriteChange(movieId, !localIsFavorite);
       }
